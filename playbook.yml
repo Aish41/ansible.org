@@ -36,7 +36,8 @@
           - wget
           - letsencrypt
           - python3-pymysql
-          - python3-certbot-nginx 
+          - python3-certbot-nginx
+          - phpmyadmin
         state: present
 
     # Step 3: Start and Enable Services
@@ -127,6 +128,17 @@
         path: /etc/nginx/sites-enabled/default
         state: absent
 
+    # Fix: Ensure phpMyAdmin auth file exists before restarting Nginx
+    - name: Secure phpMyAdmin with Basic Authentication
+      copy:
+        dest: /etc/nginx/snippets/phpmyadmin_auth.conf
+        content: |
+          auth_basic "Restricted Access";
+          auth_basic_user_file /etc/nginx/.htpasswd;
+
+    - name: Set Up htpasswd for phpMyAdmin
+      shell: echo "admin:$(openssl passwd -6 redhat)" > /etc/nginx/.htpasswd
+
     - name: Restart Nginx
       systemd:
         name: nginx
@@ -147,7 +159,4 @@
       systemd:
         name: nginx
         state: restarted
-    - name: Restart SSH
-      service:
-        name: ssh
-        state: restarted
+

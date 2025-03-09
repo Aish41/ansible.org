@@ -1,12 +1,11 @@
 server {
     listen 80;
     server_name {{ domain_name }};
-
     root /var/www/wordpress;
     index index.php index.html index.htm;
 
     location / {
-        try_files $uri $uri/ /index.php$is_args$args;
+        try_files $uri $uri/ /index.php?$args;
     }
 
     location ~ \.php$ {
@@ -16,11 +15,30 @@ server {
         include fastcgi_params;
     }
 
-    location ~ /\.ht {
+    location ~* \.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2|ttf|otf|eot|mp4|webm|ogg|mp3|wav)$ {
+        expires max;
+        log_not_found off;
+    }
+
+    # Security: Disable access to sensitive files
+    location ~* /\.ht {
         deny all;
     }
 
-    error_log  /var/log/nginx/error.log;
-    access_log /var/log/nginx/access.log;
+    # Security: Restrict access to wp-config.php
+    location ~* wp-config.php {
+        deny all;
+    }
+
+    # phpMyAdmin Configuration
+    location /phpmyadmin {
+        root /var/www/wordpress;
+        include /etc/nginx/snippets/phpmyadmin_auth.conf;
+    }
+
+    # Enable Let's Encrypt SSL (Certbot will update this section)
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/{{ domain_name }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ domain_name }}/privkey.pem;
 }
 
