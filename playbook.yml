@@ -7,9 +7,8 @@
     db_name: "wordpress"
     db_user: "wpuser"
     db_password: "redhat"
-    server_ip: "3.6.94.148"
     login_password: "{{ mysql_root_password }}"
-      #domain_name: "aish.deverkonda.shop"
+    domain_name: "aish.deverkonda.shop"
 
   tasks:
     # Step 1: Update System
@@ -134,14 +133,14 @@
         state: restarted
 
     # Step 7: Secure with Let's Encrypt (Optional)
-    #    - name: Install Certbot
-    # apt:
-    #   name: certbot
-    #   state: present
+    - name: Install Certbot
+      apt:
+        name: certbot
+        state: present
 
-          # - name: Obtain SSL Certificate
-          #command: certbot --nginx -d "{{ server_ip }}" --non-interactive --agree-tos --email admin@{{ domain_name }}
-          # notify: Restart Nginx
+    - name: Obtain SSL Certificate
+      command: certbot --nginx -d "{{ domain_name }}" --non-interactive --agree-tos --email admin@{{ domain_name }}
+      notify: Restart Nginx
 
   handlers:
     - name: Restart Nginx
